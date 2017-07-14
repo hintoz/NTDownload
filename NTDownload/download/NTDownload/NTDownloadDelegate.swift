@@ -7,12 +7,12 @@
 
 import Foundation
 
-@objc protocol NTDownloadManagerDelegate: NSObjectProtocol {
+@objc public protocol NTDownloadManagerDelegate: NSObjectProtocol {
     /// 下载完成
-    @objc func finishedDownload(task: NTDownloadTask)
+    @objc optional func finishedDownload(task: NTDownloadTask)
 }
 
-@objc protocol NTDownloadTaskDelegate: NSObjectProtocol {
+@objc public protocol NTDownloadTaskDelegate: NSObjectProtocol {
     
     /// 下载进度
     @objc optional func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64)

@@ -7,15 +7,15 @@
 
 import UIKit
 
-class NTDownloadManager: URLSessionDownloadTask {
+open class NTDownloadManager: URLSessionDownloadTask {
     
     /// 单例
-    static let shared = NTDownloadManager()
-    var configuration = URLSessionConfiguration.default
+    open static let shared = NTDownloadManager()
+    open var configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
     /// 任务列表
-    lazy var taskList = [NTDownloadTask]()
+    open lazy var taskList = [NTDownloadTask]()
     /// 下载管理器代理
-    weak var downloadManagerDelegate: NTDownloadManagerDelegate?
+    open weak var downloadManagerDelegate: NTDownloadManagerDelegate?
     fileprivate var session: URLSession?
     fileprivate lazy var downloadTaskList = [URLSessionDownloadTask]()
     /// Plist存储路径
@@ -26,25 +26,24 @@ class NTDownloadManager: URLSessionDownloadTask {
     override init() {
         super.init()
         
-        configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: OperationQueue.main)
         self.loadTaskList()
         debugPrint(plistPath)
     }
     /// 未完成列表
-    var unFinishedList: [NTDownloadTask] {
+    open var unFinishedList: [NTDownloadTask] {
         return taskList.filter({ (task) -> Bool in
             return task.isFinished == false
         })
     }
     /// 完成列表
-    var finishedList: [NTDownloadTask] {
+    open var finishedList: [NTDownloadTask] {
         return taskList.filter({ (task) -> Bool in
             return task.isFinished == true
         })
     }
     /// 添加下载文件任务
-    func newTask(urlString: String, fileImage: String?) {
+    public func newTask(urlString: String, fileImage: String?) {
         guard let url = URL(string: urlString) else {
             return
         }
@@ -66,7 +65,7 @@ class NTDownloadManager: URLSessionDownloadTask {
         self.saveTaskList()
     }
     /// 暂停下载文件
-    func pauseTask(fileInfo: NTDownloadTask) {
+    public func pauseTask(fileInfo: NTDownloadTask) {
         if fileInfo.isFinished || fileInfo.downloadState != .NTDownloading {
             return
         }
@@ -82,7 +81,7 @@ class NTDownloadManager: URLSessionDownloadTask {
         }
     }
     /// 恢复下载文件
-    func resumeTask(fileInfo: NTDownloadTask) {
+    public func resumeTask(fileInfo: NTDownloadTask) {
         if fileInfo.isFinished || fileInfo.downloadState != .NTStopDownload {
             return
         }
@@ -102,26 +101,26 @@ class NTDownloadManager: URLSessionDownloadTask {
         }
     }
     /// 开始所有下载任务
-    func resumeAllTask() {
+    public func resumeAllTask() {
         for task in unFinishedList {
             resumeTask(fileInfo: task)
         }
     }
     /// 暂停所有下载任务
-    func pauseAllTask() {
+    public func pauseAllTask() {
         for task in finishedList {
             pauseTask(fileInfo: task)
         }
     }
     /// 返回已下载完成文件路径 若未下载完成 则返回 nil
-    func taskPath(fileInfo: NTDownloadTask) -> String? {
+    public func taskPath(fileInfo: NTDownloadTask) -> String? {
         if !fileInfo.isFinished {
             return nil
         }
         return "\(documentPath)/\(fileInfo.fileName)"
     }
     /// 删除下载文件
-    func removeTask(fileInfo: NTDownloadTask) {
+    public func removeTask(fileInfo: NTDownloadTask) {
         for i in 0..<taskList.count {
             if (fileInfo.url == taskList[i].url) {
                 taskList.remove(at: i)
@@ -135,7 +134,7 @@ class NTDownloadManager: URLSessionDownloadTask {
         }
     }
     /// 删除所有下载文件
-    func removeAllTask() {
+    public func removeAllTask() {
         for task in taskList {
             if task.isFinished {
                 let path = "\(documentPath)/\(task.fileName)"
@@ -202,7 +201,7 @@ extension NTDownloadManager {
 // MARK: - URLSessionDownloadDelegate
 extension NTDownloadManager: URLSessionDownloadDelegate {
     
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         debugPrint("task id: \(task.taskIdentifier)")
         let error = error as NSError?
         if (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonUserForceQuitApplication || (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonBackgroundUpdatesDisabled {
@@ -215,7 +214,7 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
             }
         }
     }
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         let documentUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         for task in taskList {
             if task.taskIdentifier == downloadTask.taskIdentifier {
@@ -224,12 +223,12 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
                 task.resumeData = nil
                 let destUrl = documentUrl.appendingPathComponent(task.fileName)
                 try? FileManager.default.moveItem(at: location, to: destUrl)
-                downloadManagerDelegate?.finishedDownload(task: task)
+                downloadManagerDelegate?.finishedDownload?(task: task)
             }
         }
         self.saveTaskList()
     }
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         for task in unFinishedList {
             if task.taskIdentifier == downloadTask.taskIdentifier {
                 task.fileTotalSize = NTCommonHelper.calculateFileSize(totalBytesExpectedToWrite)
@@ -240,6 +239,6 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
             }
         }
     }
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
     }
 }

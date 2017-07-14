@@ -7,9 +7,9 @@
 
 import UIKit
 
-class NTCommonHelper {
+open class NTCommonHelper {
     
-    class func calculateFileSize(_ contentLength: Int64) -> Float {
+    open class func calculateFileSize(_ contentLength: Int64) -> Float {
         let dataLength: Float64 = Float64(contentLength)
         if dataLength >= (1024.0 * 1024.0 * 1024.0) {
             return Float(dataLength / (1024.0 * 1024.0 * 1024.0))
@@ -21,7 +21,7 @@ class NTCommonHelper {
             return Float(dataLength)
         }
     }
-    class func calculateUnit(_ contentLength: Int64) -> String {
+    open class func calculateUnit(_ contentLength: Int64) -> String {
         if (contentLength >= (1024 * 1024 * 1024)) {
             return "GB"
         } else if contentLength >= (1024 * 1024) {
