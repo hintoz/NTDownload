@@ -15,7 +15,7 @@
 pod 'NTDownload'
 ```
 ## GIF效果图
-![图片效果演示(https://github.com/ntian2/NTDownload/raw/master/NTDownload.gif)
+![图片效果演示](https://github.com/ntian2/NTDownload/raw/master/NTDownload.gif)
 ## 使用方法
 ```Swift
 // 控制器里设置代理 NTDownloadManager
@@ -24,7 +24,7 @@ NTDownloadManager.shared.downloadManagerDelegate = self
 NTDownloadManager.shared.newTask(urlString: urlString, fileImage: nil)
 // 遵守 NTDownloadManager
 // 下载完成 在这里改变 UI
-func finishedDownload(task: NTDownloadTask) 
+func finishedDownload(task: NTDownloadTask)
 ```
 Cell上获取实时下载进度 遵守 NTDownloadTaskDelegate
 ```Swift
