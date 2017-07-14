@@ -1,9 +1,12 @@
 # NTDownload
-## 特性
-* 支持断点续传
-* 退出App 再次打开保留下载进度
-* 基于 URLSessionDownloadTask
-* Swift 3.1 所写
+
+<p align="left">
+<a href="https://img.shields.io/cocoapods/v/NTDownload.svg”><img src="https://img.shields.io/cocoapods/v/NTDownload.svg"></a>
+<a href="https://img.shields.io/cocoapods/v/NTDownload.svg"><img src="https://img.shields.io/github/license/ntian2/NTDownload.svg?style=flat"></a>
+<a href="http://cocoadocs.org/docsets/NTDownload”><img src="https://img.shields.io/cocoapods/p/NTDownload.svg?style=flat"></a>
+</p>
+
+## 特性* 基于 URLSessionDownloadTask & Swift 3.1* 断点续传* 退出时保存进度
 ## 要求
 * iOS 8+
 ## 安装
