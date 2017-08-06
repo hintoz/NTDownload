@@ -43,7 +43,7 @@ open class NTDownloadManager: URLSessionDownloadTask {
         })
     }
     /// 添加下载文件任务
-    public func newTask(urlString: String, fileImage: String?) {
+    public func newTask(urlString: String, name: String? = nil, fileImage: String?) {
         guard let url = URL(string: urlString) else {
             return
         }
@@ -60,8 +60,10 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
         downloadTask.resume()
         self.downloadTaskList.append(downloadTask)
-        let task = NTDownloadTask(url: url, taskIdentifier: downloadTask.taskIdentifier, fileImage: fileImage, downloadState: NTDownloadState(rawValue: downloadTask.state.rawValue)!)
+        let task = NTDownloadTask(url: url, taskIdentifier: downloadTask.taskIdentifier, name: name, fileImage: fileImage, downloadState: NTDownloadState(rawValue: downloadTask.state.rawValue)!)
+        task.task = downloadTask
         self.taskList.append(task)
+        downloadManagerDelegate?.addedDownload?(task: task)
         self.saveTaskList()
     }
     /// 暂停下载文件
@@ -74,6 +76,7 @@ open class NTDownloadManager: URLSessionDownloadTask {
                 downloadTask.cancel(byProducingResumeData: { (resumeData) in
                     fileInfo.resumeData = resumeData
                     fileInfo.downloadState = NTDownloadState(rawValue: downloadTask.state.rawValue)
+                    fileInfo.task = downloadTask
                     fileInfo.delegate?.downloadTaskStopDownload?(task: fileInfo)
                     self.saveTaskList()
                 })
@@ -95,6 +98,7 @@ open class NTDownloadManager: URLSessionDownloadTask {
                 fileInfo.taskIdentifier = downloadTaskList[i].taskIdentifier
                 downloadTaskList[i].resume()
                 fileInfo.downloadState = NTDownloadState(rawValue: downloadTaskList[i].state.rawValue)
+                fileInfo.task = downloadTaskList[i]
                 fileInfo.delegate?.downloadTaskDownloading?(task: fileInfo)
                 fileInfo.resumeData = nil
             }
@@ -123,11 +127,13 @@ open class NTDownloadManager: URLSessionDownloadTask {
     public func removeTask(fileInfo: NTDownloadTask) {
         for i in 0..<taskList.count {
             if (fileInfo.url == taskList[i].url) {
-                taskList.remove(at: i)
                 if fileInfo.isFinished {
                     let path = "\(documentPath)/\(fileInfo.fileName)"
                     try? FileManager.default.removeItem(atPath: path)
+                } else {
+                    taskList[i].task?.cancel()
                 }
+                taskList.remove(at: i)
                 saveTaskList()
                 break
             }
@@ -143,6 +149,18 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
         try? FileManager.default.removeItem(atPath: plistPath)
     }
+    
+    public func clearTMP() {
+        do {
+            let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())
+            try tmpDirectory.forEach { file in
+                let path = String.init(format: "%@/%@", NSTemporaryDirectory(), file)
+                try FileManager.default.removeItem(atPath: path)
+            }
+        } catch {
+            print(error)
+        }
+    }
 }
 // MARK: - 私有方法
 extension NTDownloadManager {
@@ -150,6 +168,7 @@ extension NTDownloadManager {
         let jsonArray = NSMutableArray()
         for task in taskList {
             let jsonItem = NSMutableDictionary()
+            jsonItem["name"] = task.name
             jsonItem["url"] = task.url.absoluteString
             jsonItem["isFinished"] = task.isFinished
             jsonItem["fileImage"] = task.fileImage
@@ -169,13 +188,13 @@ extension NTDownloadManager {
             return
         }
         for jsonItem in jsonArray {
-            guard let item = jsonItem as? NSDictionary, let urlString = item["url"] as? String, let isFinished = item["isFinished"] as? Bool, let fileTotalSize = item["fileTotalSize"] as? Float, let fileTotalUnit = item["fileTotalUnit"] as? String, let fileReceivedSize = item["fileReceivedSize"] as? Float, let fileReceivedUnit = item["fileReceivedUnit"] as? String else {
+            guard let item = jsonItem as? NSDictionary, let name = item["name"] as? String, let urlString = item["url"] as? String, let isFinished = item["isFinished"] as? Bool, let fileTotalSize = item["fileTotalSize"] as? Float, let fileTotalUnit = item["fileTotalUnit"] as? String, let fileReceivedSize = item["fileReceivedSize"] as? Float, let fileReceivedUnit = item["fileReceivedUnit"] as? String else {
                 return
             }
             let resumeData = item["resumeData"] as? Data
             let url = URL(string: urlString)
             let fileImage = item["fileImage"] as? String
-            let task = NTDownloadTask(url: url!, taskIdentifier: 0, fileImage: fileImage, downloadState: NTDownloadState.NTStopDownload)
+            let task = NTDownloadTask(url: url!, taskIdentifier: 0, name: name, fileImage: fileImage, downloadState: NTDownloadState.NTStopDownload)
             task.isFinished = isFinished
             task.fileTotalSize = fileTotalSize
             task.fileTotalUnit = fileTotalUnit

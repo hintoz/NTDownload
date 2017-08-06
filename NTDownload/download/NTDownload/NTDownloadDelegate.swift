@@ -10,6 +10,8 @@ import Foundation
 @objc public protocol NTDownloadManagerDelegate: NSObjectProtocol {
     /// 下载完成
     @objc optional func finishedDownload(task: NTDownloadTask)
+    ///
+    @objc optional func addedDownload(task: NTDownloadTask)
 }
 
 @objc public protocol NTDownloadTaskDelegate: NSObjectProtocol {
