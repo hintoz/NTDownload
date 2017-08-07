@@ -32,15 +32,19 @@ open class NTDownloadTask: NSObject {
     open var fileTotalUnit: String = ""
     /// 文件名字
     open var fileName: String
+    /// Name
+    open var name: String
     /// 文件下载状态
     open var downloadState: NTDownloadState?
     /// 文件已下载数据
     open var resumeData: Data?
+    open var task: URLSessionDownloadTask?
     open weak var delegate: NTDownloadTaskDelegate?
     
-    init(url: URL, taskIdentifier: Int, fileImage: String?, downloadState: NTDownloadState) {
+    init(url: URL, taskIdentifier: Int, name: String? = nil, fileImage: String?, downloadState: NTDownloadState) {
         self.url = url
         self.fileName = (url.absoluteString as NSString).lastPathComponent
+        self.name = name ?? (url.absoluteString as NSString).lastPathComponent
         self.taskIdentifier = taskIdentifier
         self.fileImage = fileImage
         self.downloadState = downloadState
