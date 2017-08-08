@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name         = "NTDownload"
-  s.version      = "0.0.1"
+  s.version      = "0.0.3"
   s.summary      = "iOS 下载 断点下载 后台断点下载 退出App 离线断点下载 使用 Swift 3.1 "
 
   s.homepage     = "https://github.com/ntian2/NTDownload"
