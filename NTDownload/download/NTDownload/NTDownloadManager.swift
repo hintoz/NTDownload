@@ -16,12 +16,12 @@ open class NTDownloadManager: URLSessionDownloadTask {
     open lazy var taskList = [NTDownloadTask]()
     /// 下载管理器代理
     open weak var downloadManagerDelegate: NTDownloadManagerDelegate?
-    fileprivate var session: URLSession?
-    fileprivate lazy var downloadTaskList = [URLSessionDownloadTask]()
+    private var session: URLSession?
+    private lazy var downloadTaskList = [URLSessionDownloadTask]()
     /// Plist存储路径
-    fileprivate let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
+    private let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
     /// 文件存储路径
-    fileprivate let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+    private let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     
     override init() {
         super.init()
@@ -238,7 +238,7 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
         for task in taskList {
             if task.taskIdentifier == downloadTask.taskIdentifier {
                 task.isFinished = true
-                task.downloadState = .NTFinishedDownload
+                task.status = .NTFinishedDownload
                 task.resumeData = nil
                 let destUrl = documentUrl.appendingPathComponent(task.fileName)
                 try? FileManager.default.moveItem(at: location, to: destUrl)

@@ -18,19 +18,19 @@ class SPDownloadingViewCell: UITableViewCell {
         didSet {
             fileName.text = fileInfo?.fileName
             fileInfo?.delegate = self
-            if fileInfo?.downloadState?.rawValue == 0 {
+            if fileInfo?.status?.rawValue == 0 {
                 controlBtn.titleLabel?.text = "暂停"
-            } else if fileInfo?.downloadState?.rawValue == 2 {
+            } else if fileInfo?.status?.rawValue == 2 {
                 controlBtn.titleLabel?.text = "继续"
             }
         }
     }
     
     @IBAction func startDownload() {
-        if fileInfo?.downloadState?.rawValue == 0 {
+        if fileInfo?.status?.rawValue == 0 {
             NTDownloadManager.shared.pauseTask(fileInfo: fileInfo!)
             controlBtn.titleLabel?.text = "暂停"
-        } else if fileInfo?.downloadState?.rawValue == 2 {
+        } else if fileInfo?.status?.rawValue == 2 {
             NTDownloadManager.shared.resumeTask(fileInfo: fileInfo!)
             controlBtn.titleLabel?.text = "继续"
         }
