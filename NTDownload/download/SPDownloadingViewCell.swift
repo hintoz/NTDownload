@@ -38,9 +38,9 @@ class SPDownloadingViewCell: UITableViewCell {
     }
     override func awakeFromNib() {
         super.awakeFromNib()
-        if fileInfo?.downloadState?.rawValue == 0 {
+        if fileInfo?.status?.rawValue == 0 {
             controlBtn.titleLabel?.text = "暂停"
-        } else if fileInfo?.downloadState?.rawValue == 2 {
+        } else if fileInfo?.status?.rawValue == 2 {
             controlBtn.titleLabel?.text = "继续"
         }
     }
@@ -48,9 +48,10 @@ class SPDownloadingViewCell: UITableViewCell {
 // MARK: - NTDownloadDelegate
 extension SPDownloadingViewCell: NTDownloadTaskDelegate {
     func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        
         let progress = Float(totalBytesWritten) / Float(totalBytesExpectedToWrite)
         self.progressView.progress = progress
-        let progressText = String(format: "%.2f%@ / %.2f%@", task.fileReceivedSize, task.fileReceivedUnit, task.fileTotalSize, task.fileTotalUnit)
+        let progressText = String(format: "%.2f%@ / %.2f%@", (task.downloadedFileSize?.size)!, (task.downloadedFileSize?.unit)!, (task.fileSize?.size)!, (task.fileSize?.unit)!)
         progressLabel.text = progressText
     }
     func downloadTaskDownloading(task: NTDownloadTask) {

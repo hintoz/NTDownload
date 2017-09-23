@@ -29,7 +29,7 @@ class ViewController: UIViewController {
         alert.addTextField(configurationHandler: nil)
         let okAction = UIAlertAction(title: "下载", style: .default) { (action) in
             let textFiled = alert.textFields?[0].text
-            NTDownloadManager.shared.newTask(urlString: textFiled!, fileImage: nil)
+            NTDownloadManager.shared.addDownloadTask(urlString: textFiled!, fileImage: nil)
             self.initdata()
         }
         let action = UIAlertAction(title: "取消", style: .cancel, handler: nil)
