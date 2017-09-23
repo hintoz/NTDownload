@@ -246,5 +246,4 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
             }
         }
     }
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {}
 }
