@@ -10,57 +10,39 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    var downedTableView = UITableView()
-    var downingTableView = UITableView()
-    var progress: Float = 0.0
+    var downloadedTableView = UITableView()
+    var downloadingTableView = UITableView()
+    var downloaded = [NTDownloadTask]()
+    var downloading = [NTDownloadTask]()
+    
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBAction func control() {
         if segmentedControl.selectedSegmentIndex == 0 {
-            downedTableView.isHidden = false
-            downingTableView.isHidden = true
+            downloadedTableView.isHidden = false
+            downloadingTableView.isHidden = true
         } else {
-            downedTableView.isHidden = true
-            downingTableView.isHidden = false
+            downloadedTableView.isHidden = true
+            downloadingTableView.isHidden = false
         }
         initdata()
     }
     @IBAction func addBtn() {
         let alert = UIAlertController(title: "URL", message: nil, preferredStyle: .alert)
         alert.addTextField(configurationHandler: nil)
-        let okAction = UIAlertAction(title: "下载", style: .default) { (action) in
+        let okAction = UIAlertAction(title: "Download", style: .default) { (action) in
             let textFiled = alert.textFields?[0].text
             NTDownloadManager.shared.addDownloadTask(urlString: textFiled!, fileImage: nil)
             self.initdata()
         }
-        let action = UIAlertAction(title: "取消", style: .cancel, handler: nil)
+        let action = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alert.addAction(okAction)
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
-    var downed = [NTDownloadTask]()
-    var downing = [NTDownloadTask]()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        automaticallyAdjustsScrollViewInsets = false
-        let rect = CGRect(x: 0, y: 64, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 64)
-        NTDownloadManager.shared.delegate = self
-        downedTableView = UITableView(frame: rect, style: .plain)
-        downingTableView = UITableView(frame: rect, style: .plain)
-        view.addSubview(downedTableView)
-        view.addSubview(downingTableView)
-        downedTableView.tag = 0
-        downedTableView.isHidden = false
-        downedTableView.dataSource = self
-        downedTableView.delegate = self
-        downedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: "cellId")
-        downedTableView.rowHeight = 50
-        downingTableView.tag = 1
-        downingTableView.dataSource = self
-        downingTableView.delegate = self
-        downingTableView.isHidden = true
-        downingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: "cellId2")
-        downingTableView.rowHeight = 50
-        
+        setupUI()
         initdata()
     }
     override func viewWillAppear(_ animated: Bool) {
@@ -69,33 +51,34 @@ class ViewController: UIViewController {
     }
     func initdata() {
 
-        self.downed = NTDownloadManager.shared.finishedList
-        self.downing = NTDownloadManager.shared.unFinishedList
-        downedTableView.reloadData()
-        downingTableView.reloadData()
+        self.downloaded = NTDownloadManager.shared.finishedList
+        self.downloading = NTDownloadManager.shared.unFinishedList
+        downloadedTableView.reloadData()
+        downloadingTableView.reloadData()
     }
-
-
 }
 // MARK: - UITableViewDelegate, UITableViewDataSource
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
  
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if tableView.tag == 0 {
-            return downed.count
+            return downloaded.count
         } else {
-            return downing.count
+            return downloading.count
         }
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if tableView.tag == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "cellId", for: indexPath) as! SPDownloadedViewCell
             
-            cell.fileName.text = downed[indexPath.row].fileName
+            cell.fileName.text = downloaded[indexPath.row].fileName
+            let sizeText = "\(Int((downloaded[indexPath.row].fileSize?.size ?? 0))) \(downloaded[indexPath.row].fileSize?.unit ?? "")"
+            cell.fileSize.text = sizeText
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "cellId2", for: indexPath) as! SPDownloadingViewCell
-            cell.fileInfo = downing[indexPath.row]
+            cell.delegate = self
+            cell.fileInfo = downloading[indexPath.row]
             return cell
         }
     }
@@ -103,9 +86,51 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
 
 // MARK: - NTDownloadManagerDelegate
 extension ViewController: NTDownloadManagerDelegate {
-    
-    func finishedDownload(task: NTDownloadTask) {
-        print("完成\(task.fileName)")
+    func downloadRequestFinished(downloadTask: NTDownloadTask) {
+        print("DownloadFinished \(downloadTask.fileName)")
         initdata()
+    }
+    func downloadRequestUpdateProgress(downloadTask: NTDownloadTask) {
+        let cellArr = self.downloadingTableView.visibleCells
+        for obj in cellArr {
+            if obj.isKind(of: SPDownloadingViewCell.self) {
+                let cell = obj as! SPDownloadingViewCell
+                if cell.fileInfo?.fileURL == downloadTask.fileURL {
+                    cell.fileInfo = downloadTask
+                }
+            }
+        }
+    }
+}
+extension ViewController: demoCellDelegate {
+    func didClickControlBtn(downloadTask: NTDownloadTask) {
+        if downloadTask.status == .NTDownloading {
+            NTDownloadManager.shared.pauseTask(downloadTask: downloadTask)
+        } else if downloadTask.status == .NTPauseDownload {
+            NTDownloadManager.shared.resumeTask(downloadTask: downloadTask)
+        }
+    }
+}
+extension ViewController {
+    private func setupUI() {
+        automaticallyAdjustsScrollViewInsets = false
+        let rect = CGRect(x: 0, y: 64, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 64)
+        NTDownloadManager.shared.delegate = self
+        downloadedTableView = UITableView(frame: rect, style: .plain)
+        downloadingTableView = UITableView(frame: rect, style: .plain)
+        view.addSubview(downloadedTableView)
+        view.addSubview(downloadingTableView)
+        downloadedTableView.tag = 0
+        downloadedTableView.isHidden = false
+        downloadedTableView.dataSource = self
+        downloadedTableView.delegate = self
+        downloadedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: "cellId")
+        downloadedTableView.rowHeight = 50
+        downloadingTableView.tag = 1
+        downloadingTableView.dataSource = self
+        downloadingTableView.delegate = self
+        downloadingTableView.isHidden = true
+        downloadingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: "cellId2")
+        downloadingTableView.rowHeight = 50
     }
 }

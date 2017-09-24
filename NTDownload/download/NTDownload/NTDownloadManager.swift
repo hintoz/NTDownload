@@ -10,7 +10,6 @@ import UIKit
 open class NTDownloadManager: URLSessionDownloadTask {
     
     open static let shared = NTDownloadManager()
-    open var configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
     open weak var delegate: NTDownloadManagerDelegate?
     
     open var unFinishedList: [NTDownloadTask] {
@@ -21,21 +20,17 @@ open class NTDownloadManager: URLSessionDownloadTask {
     }
     
     private lazy var taskList = [NTDownloadTask]()
+    private let configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
     private var session: URLSession!
     private let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
     private let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     
     override init() {
         super.init()
+        
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: OperationQueue.main)
         self.loadTaskList()
         debugPrint(plistPath)
-        
-        session.getTasksWithCompletionHandler { (_, _, downloadTasks) in
-            for downloadTask in downloadTasks {
-                print(downloadTask)
-            }
-        }
     }
 
     /// 添加下载文件任务
@@ -61,55 +56,55 @@ open class NTDownloadManager: URLSessionDownloadTask {
         task.task = downloadTask
         self.taskList.append(task)
         delegate?.addedDownloadRequest?(downloadTask: task)
-        print(taskList[0])
         self.saveTaskList()
     }
     /// 暂停下载文件
-    public func pauseTask(fileInfo: NTDownloadTask) {
-        if fileInfo.status == .NTFinishedDownload || fileInfo.status != .NTDownloading {
+    public func pauseTask(downloadTask: NTDownloadTask) {
+        if downloadTask.status == .NTFinishedDownload || downloadTask.status != .NTDownloading {
             return
         }
-        var downloadTask = fileInfo.task
-        if downloadTask == nil {
-            downloadTask = session.downloadTask(with: fileInfo.fileURL)
-            fileInfo.task = downloadTask
+        var task = downloadTask.task
+        if task == nil {
+            task = session.downloadTask(with: downloadTask.fileURL)
+            downloadTask.task = task
         }
-        downloadTask?.suspend()
-        fileInfo.status = .NTPauseDownload
-        delegate?.downloadRequestDidPaused?(downloadTask: fileInfo)
+        task?.suspend()
+        downloadTask.status = NTDownloadStatus(rawValue: (task?.state.rawValue)!)!.status
+        print(downloadTask.status)
+        delegate?.downloadRequestDidPaused?(downloadTask: downloadTask)
     }
     /// 恢复下载文件
-    public func resumeTask(fileInfo: NTDownloadTask) {
-        if fileInfo.status == .NTFinishedDownload || fileInfo.status != .NTPauseDownload {
+    public func resumeTask(downloadTask: NTDownloadTask) {
+        if downloadTask.status == .NTFinishedDownload || downloadTask.status != .NTPauseDownload {
             return
         }
-        var downloadTask = fileInfo.task
-        if downloadTask == nil {
-            downloadTask = session.downloadTask(with: fileInfo.fileURL)
-            fileInfo.task = downloadTask
+        var task = downloadTask.task
+        if task == nil {
+            task = session.downloadTask(with: downloadTask.fileURL)
+            downloadTask.task = task
         }
-        downloadTask?.resume()
-        fileInfo.status = NTDownloadStatus(rawValue: (downloadTask?.state.rawValue)!)!.status
-        delegate?.downloadRequestDidStarted?(downloadTask: fileInfo)
+        task?.resume()
+        downloadTask.status = NTDownloadStatus(rawValue: (task?.state.rawValue)!)!.status
+        delegate?.downloadRequestDidStarted?(downloadTask: downloadTask)
     }
     /// 开始所有下载任务
     public func resumeAllTask() {
         for task in unFinishedList {
-            resumeTask(fileInfo: task)
+            resumeTask(downloadTask: task)
         }
     }
     /// 暂停所有下载任务
     public func pauseAllTask() {
         for task in unFinishedList {
-            pauseTask(fileInfo: task)
+            pauseTask(downloadTask: task)
         }
     }
     /// 返回已下载完成文件路径 若未下载完成 则返回 nil
-    public func taskPath(fileInfo: NTDownloadTask) -> String? {
-        if fileInfo.status != .NTFinishedDownload {
+    public func taskPath(downloadTask: NTDownloadTask) -> String? {
+        if downloadTask.status != .NTFinishedDownload {
             return nil
         }
-        return "\(documentPath)/\(fileInfo.fileName)"
+        return "\(documentPath)/\(downloadTask.fileName)"
     }
 //    /// 删除下载文件
 //    public func removeTask(fileInfo: NTDownloadTask) {
