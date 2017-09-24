@@ -17,7 +17,6 @@ class SPDownloadingViewCell: UITableViewCell {
     var fileInfo: NTDownloadTask? {
         didSet {
             fileName.text = fileInfo?.fileName
-            fileInfo?.delegate = self
             if fileInfo?.status == .NTDownloading {
                 controlBtn.titleLabel?.text = "暂停"
             } else if fileInfo?.status == .NTPauseDownload {
@@ -43,21 +42,5 @@ class SPDownloadingViewCell: UITableViewCell {
         } else if fileInfo?.status == .NTPauseDownload {
             controlBtn.titleLabel?.text = "继续"
         }
-    }
-}
-// MARK: - NTDownloadDelegate
-extension SPDownloadingViewCell: NTDownloadTaskDelegate {
-    func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        
-        let progress = Float(totalBytesWritten) / Float(totalBytesExpectedToWrite)
-        self.progressView.progress = progress
-        let progressText = String(format: "%.2f%@ / %.2f%@", (task.downloadedFileSize?.size)!, (task.downloadedFileSize?.unit)!, (task.fileSize?.size)!, (task.fileSize?.unit)!)
-        progressLabel.text = progressText
-    }
-    func downloadTaskDownloading(task: NTDownloadTask) {
-        controlBtn.titleLabel?.text = "暂停"
-    }
-    func downloadTaskStopDownload(task: NTDownloadTask) {
-        controlBtn.titleLabel?.text = "继续"
     }
 }

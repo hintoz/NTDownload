@@ -43,7 +43,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         automaticallyAdjustsScrollViewInsets = false
         let rect = CGRect(x: 0, y: 64, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 64)
-        NTDownloadManager.shared.downloadManagerDelegate = self
+        NTDownloadManager.shared.delegate = self
         downedTableView = UITableView(frame: rect, style: .plain)
         downingTableView = UITableView(frame: rect, style: .plain)
         view.addSubview(downedTableView)

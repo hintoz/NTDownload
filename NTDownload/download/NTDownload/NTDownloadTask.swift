@@ -7,14 +7,15 @@
 
 import Foundation
 
-public typealias size = (size: Float, unit: String)?
+public typealias size = (size: Float, unit: String)
 
 public enum NTDownloadStatus: Int {
-    case NTDownloading // Downloading
-    case NTPauseDownload // PauseDownload
-//    case NTStopDownload // StopDownload
-    case NTFinishedDownload // FinishedDownload
-    case NTUnknown // Unknown
+    
+    case NTDownloading
+    case NTPauseDownload
+    case NTFinishedDownload
+    case NTUnknown
+    
     var status: NTDownloadStatus {
         switch self.rawValue {
         case 0:
@@ -27,29 +28,22 @@ public enum NTDownloadStatus: Int {
             return .NTUnknown
         }
     }
-  
 }
 open class NTDownloadTask: NSObject {
-    /// 下载地址
-    open var fileURL: URL
-    /// 文件名字
-    open var fileName: String
-    /// 文件的附带图片地址
-    open var fileImage: String?
-    /// 文件下载状态
-    open var status: NTDownloadStatus?
-    /// 文件下载大小
-    open var downloadedFileSize: size
-    /// 文件总大小
-    open var fileSize: size
 
+    open var fileURL: URL
+    open var fileName: String
+    open var fileImage: String?
+    open var status: NTDownloadStatus?
+    open var downloadedFileSize: size?
+    open var fileSize: size?
+    open var progress: Float = 0
     open var task: URLSessionDownloadTask?
-    open weak var delegate: NTDownloadTaskDelegate?
+    
     
     init(fileURL: URL, fileName: String, fileImage: String? = nil) {
         self.fileURL = fileURL
         self.fileName = fileName
         self.fileImage = fileImage
-//        self.status = status
     }
 }

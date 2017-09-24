@@ -9,17 +9,14 @@ import Foundation
 
 @objc public protocol NTDownloadManagerDelegate: NSObjectProtocol {
     /// 下载完成
-    @objc optional func finishedDownload(task: NTDownloadTask)
-    ///
-    @objc optional func addedDownload(task: NTDownloadTask)
-}
+    @objc optional func downloadRequestFinished(downloadTask: NTDownloadTask)
 
-@objc public protocol NTDownloadTaskDelegate: NSObjectProtocol {
-    
+    @objc optional func addedDownloadRequest(downloadTask: NTDownloadTask)
+
     /// 下载进度
-    @objc optional func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64)
+    @objc optional func downloadRequestUpdateProgress(downloadTask: NTDownloadTask)
     /// 开始下载
-    @objc optional func downloadTaskDownloading(task: NTDownloadTask)
+    @objc optional func downloadRequestDidStarted(downloadTask: NTDownloadTask)
     /// 暂停下载
-    @objc optional func downloadTaskStopDownload(task: NTDownloadTask)
+    @objc optional func downloadRequestDidPaused(downloadTask: NTDownloadTask)
 }
