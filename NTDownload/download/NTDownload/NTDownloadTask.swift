@@ -46,10 +46,10 @@ open class NTDownloadTask: NSObject {
     open var task: URLSessionDownloadTask?
     open weak var delegate: NTDownloadTaskDelegate?
     
-    init(fileURL: URL, fileName: String, fileImage: String? = nil, status: NTDownloadStatus) {
+    init(fileURL: URL, fileName: String, fileImage: String? = nil) {
         self.fileURL = fileURL
         self.fileName = fileName
         self.fileImage = fileImage
-        self.status = status
+//        self.status = status
     }
 }
