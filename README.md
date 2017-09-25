@@ -1,39 +1,33 @@
 # NTDownload
 
-<p align="left">
-<a href="https://img.shields.io/cocoapods/v/NTDownload.svg”><img src="https://img.shields.io/cocoapods/v/NTDownload.svg"></a>
-<a href="https://img.shields.io/cocoapods/v/NTDownload.svg"><img src="https://img.shields.io/github/license/ntian2/NTDownload.svg?style=flat"></a>
-<a href="http://cocoadocs.org/docsets/NTDownload”><img src="https://img.shields.io/cocoapods/p/NTDownload.svg?style=flat"></a>
+<p align="center">
+<a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/cocoapods/v/NTDownload.svg?style=flat"></a>
+<a href="https://raw.githubusercontent.com/ntian2/NTDownload/master/LICENSE"><img src="https://img.shields.io/cocoapods/l/NTDownload.svg?style=flat"></a>
+<a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/cocoapods/p/NTDownload.svg?style=flat"></a>
+<a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/badge/Swift-4.0%2B-orange.svg"></a>
 </p>
-
-## 特性* 基于 URLSessionDownloadTask & Swift 3.1* 断点续传* 退出时保存进度
-## 要求
-* iOS 8+
-## 安装
-### cocoapods
+NTDownlaod is a lightweight Swift 4 library for download files.
+## Features
+- [x] Support for resume breakpoint
+- [x] Download files when the app is in the background.
+- [x] `URLSession` -based networking.
+- [x] It can resume or pause any download tasks.
+- [x] This library contains only 4 files.
+## Requirements
+* iOS 8.0+
+* Swift 4
+## Installation
+NTDownlaod is available through Cocoapods. So you can add the following line to your Podfile.
 ```ruby
 pod 'NTDownload'
 ```
-## GIF效果图
-![图片效果演示](https://github.com/ntian2/NTDownload/raw/master/NTDownload.gif)
-## 使用方法
-```Swift
-// 控制器里设置代理 NTDownloadManager
-NTDownloadManager.shared.downloadManagerDelegate = self
-// 指定下载 URLString
-NTDownloadManager.shared.newTask(urlString: urlString, fileImage: nil)
-// 遵守 NTDownloadManager
-// 下载完成 在这里改变 UI
-func finishedDownload(task: NTDownloadTask)
+## Usages
+```swift
+let urlString = "url_of_you_file"
+NTDownloadManager.shared.addDownloadTask(urlString: urlString)
 ```
-Cell上获取实时下载进度 遵守 NTDownloadTaskDelegate
-```Swift
-// 下载进度
-func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64)
-// 开始下载 在这里改变 UI
-func downloadTaskDownloading(task: NTDownloadTask)
-// 暂停下载 在这里改变 UI
-func downloadTaskStopDownload(task: NTDownloadTask)
-```
-# License
-NTDownload is available under the MIT license. See the LICENSE file for more info.
+You can also clone the repo, and run the example project.
+## GIF Demo
+![GIFDemo](https://github.com/ntian2/NTDownload/raw/master/NTDownload.gif)
+## License
+NTDownload is released under the MIT license. See LICENSE for details.
