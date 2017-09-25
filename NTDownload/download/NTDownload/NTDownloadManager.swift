@@ -55,7 +55,7 @@ open class NTDownloadManager: URLSessionDownloadTask {
         task.status = status
         task.task = downloadTask
         self.taskList.append(task)
-        delegate?.addedDownloadRequest?(downloadTask: task)
+        delegate?.addDownloadRequest?(downloadTask: task)
         self.saveTaskList()
     }
     /// 暂停下载文件
@@ -70,7 +70,6 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
         task?.suspend()
         downloadTask.status = NTDownloadStatus(rawValue: (task?.state.rawValue)!)!.status
-        print(downloadTask.status)
         delegate?.downloadRequestDidPaused?(downloadTask: downloadTask)
     }
     /// 恢复下载文件
@@ -191,7 +190,6 @@ private extension NTDownloadManager {
 extension NTDownloadManager: URLSessionDownloadDelegate {
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        debugPrint("task id: \(task.taskIdentifier)")
         let error = error as NSError?
         if (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonUserForceQuitApplication || (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonBackgroundUpdatesDisabled {
             var downloadTask = task as! URLSessionDownloadTask
@@ -224,6 +222,7 @@ extension NTDownloadManager: URLSessionDownloadDelegate {
         saveTaskList()
     }
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+//        unFinishedList.filter { }
         for task in unFinishedList {
             if downloadTask.isEqual(task.task) {
                 task.fileSize = (NTCommonHelper.calculateFileSize(totalBytesExpectedToWrite), NTCommonHelper.calculateUnit(totalBytesExpectedToWrite))

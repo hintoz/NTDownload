@@ -7,29 +7,21 @@
 //
 
 import UIKit
-protocol demoCellDelegate {
-    func didClickControlBtn(downloadTask: NTDownloadTask)
-}
+
 class SPDownloadingViewCell: UITableViewCell {
 
     @IBOutlet weak var progressLabel: UILabel!
-    @IBOutlet weak var controlBtn: UIButton!
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var fileName: UILabel!
-    var delegate: demoCellDelegate?
     var fileInfo: NTDownloadTask? {
         didSet {
             fileName.text = fileInfo?.fileName
             progressView.progress = (fileInfo?.progress)!
-            let status = fileInfo?.status
-            if status == .NTDownloading {
-                controlBtn.titleLabel?.text = "Pause"
-            } else if status == .NTPauseDownload {
-                controlBtn.titleLabel?.text = "Start"
+            guard let downloadedFileSize = fileInfo?.downloadedFileSize, let fileSize = fileInfo?.fileSize else {
+                return
             }
+            let progressText = String(format: "%.2f%@ / %.2f%@", downloadedFileSize.size, downloadedFileSize.unit, fileSize.size, fileSize.unit)
+            progressLabel.text = progressText
         }
-    }
-    @IBAction func startDownload() {
-        delegate?.didClickControlBtn(downloadTask: fileInfo!)
     }
 }

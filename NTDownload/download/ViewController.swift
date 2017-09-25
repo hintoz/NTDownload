@@ -69,17 +69,25 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if tableView.tag == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "cellId", for: indexPath) as! SPDownloadedViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: "downloadedCellId", for: indexPath) as! SPDownloadedViewCell
             
             cell.fileName.text = downloaded[indexPath.row].fileName
             let sizeText = "\(Int((downloaded[indexPath.row].fileSize?.size ?? 0))) \(downloaded[indexPath.row].fileSize?.unit ?? "")"
             cell.fileSize.text = sizeText
             return cell
         } else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "cellId2", for: indexPath) as! SPDownloadingViewCell
-            cell.delegate = self
+            let cell = tableView.dequeueReusableCell(withIdentifier: "downloadingCellId", for: indexPath) as! SPDownloadingViewCell
             cell.fileInfo = downloading[indexPath.row]
             return cell
+        }
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let cell = tableView.cellForRow(at: indexPath) as! SPDownloadingViewCell
+        if cell.fileInfo?.status == .NTDownloading {
+            NTDownloadManager.shared.pauseTask(downloadTask: cell.fileInfo!)
+        } else if cell.fileInfo?.status == .NTPauseDownload {
+            NTDownloadManager.shared.resumeTask(downloadTask: cell.fileInfo!)
         }
     }
 }
@@ -101,14 +109,11 @@ extension ViewController: NTDownloadManagerDelegate {
             }
         }
     }
-}
-extension ViewController: demoCellDelegate {
-    func didClickControlBtn(downloadTask: NTDownloadTask) {
-        if downloadTask.status == .NTDownloading {
-            NTDownloadManager.shared.pauseTask(downloadTask: downloadTask)
-        } else if downloadTask.status == .NTPauseDownload {
-            NTDownloadManager.shared.resumeTask(downloadTask: downloadTask)
-        }
+    func downloadRequestDidStarted(downloadTask: NTDownloadTask) {
+        print("Start")
+    }
+    func downloadRequestDidPaused(downloadTask: NTDownloadTask) {
+        print("Pause")
     }
 }
 extension ViewController {
@@ -124,13 +129,13 @@ extension ViewController {
         downloadedTableView.isHidden = false
         downloadedTableView.dataSource = self
         downloadedTableView.delegate = self
-        downloadedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: "cellId")
+        downloadedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: "downloadedCellId")
         downloadedTableView.rowHeight = 50
         downloadingTableView.tag = 1
         downloadingTableView.dataSource = self
         downloadingTableView.delegate = self
         downloadingTableView.isHidden = true
-        downloadingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: "cellId2")
+        downloadingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: "downloadingCellId")
         downloadingTableView.rowHeight = 50
     }
 }
