@@ -82,6 +82,9 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         }
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView.tag != 1 {
+            return
+        }
         tableView.deselectRow(at: indexPath, animated: true)
         let cell = tableView.cellForRow(at: indexPath) as! SPDownloadingViewCell
         if cell.fileInfo?.status == .NTDownloading {

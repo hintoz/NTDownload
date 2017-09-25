@@ -14,6 +14,7 @@ public enum NTDownloadStatus: Int {
     case NTDownloading
     case NTPauseDownload
     case NTFinishedDownload
+    case NTFailed
     case NTUnknown
     
     var status: NTDownloadStatus {
@@ -24,6 +25,8 @@ public enum NTDownloadStatus: Int {
             return .NTPauseDownload
         case 3:
             return .NTFinishedDownload
+        case 4:
+            return .NTFailed
         default:
             return .NTUnknown
         }
