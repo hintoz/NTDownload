@@ -5,7 +5,9 @@
 <a href="https://raw.githubusercontent.com/ntian2/NTDownload/master/LICENSE"><img src="https://img.shields.io/cocoapods/l/NTDownload.svg?style=flat"></a>
 <a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/cocoapods/p/NTDownload.svg?style=flat"></a>
 <a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/badge/Swift-4.0%2B-orange.svg"></a>
+<a href="https://github.com/ntian2/NTDownload/blob/master/README.zh-cn.md/"><img src="https://img.shields.io/badge/%E4%B8%AD%E6%96%87-README-blue.svg?style=flat"></a>
 </p>
+
 
 NTDownlaod is a lightweight Swift 4 library for download files.
 
