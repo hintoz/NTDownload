@@ -37,12 +37,18 @@ open class NTDownloadTask: NSObject {
     open var fileURL: URL
     open var fileName: String
     open var fileImage: String?
-    open var status: NTDownloadStatus?
+    open var status: NTDownloadStatus? {
+        didSet {
+            if status == .NTFinishedDownload {
+                destinationPath = "\(NTDocumentPath)/\(self.fileName)"
+            }
+        }
+    }
     open var downloadedFileSize: size?
     open var fileSize: size?
     open var progress: Float = 0
     open var task: URLSessionDownloadTask?
-    
+    private(set) var destinationPath: String?
     
     init(fileURL: URL, fileName: String, fileImage: String? = nil) {
         self.fileURL = fileURL

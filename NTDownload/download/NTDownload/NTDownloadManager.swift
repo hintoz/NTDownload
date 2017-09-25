@@ -23,7 +23,6 @@ open class NTDownloadManager: URLSessionDownloadTask {
     private let configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
     private var session: URLSession!
     private let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
-    private let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     
     override init() {
         super.init()
@@ -93,12 +92,6 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
     }
 
-//    public func finishedTaskPath(downloadTask: NTDownloadTask) -> String? {
-//        if downloadTask.status != .NTFinishedDownload {
-//            return nil
-//        }
-//        return "\(documentPath)/\(downloadTask.fileName)"
-//    }
 //    /// 删除下载文件
 //    public func removeTask(fileInfo: NTDownloadTask) {
 //        for i in 0..<taskList.count {
