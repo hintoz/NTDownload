@@ -15,6 +15,9 @@ class ViewController: UIViewController {
     var downloaded = [NTDownloadTask]()
     var downloading = [NTDownloadTask]()
     
+    private let downloadingCellId = "downloadingCellId"
+    private let downloadedCellId = "downloadedCellId"
+    
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBAction func control() {
         if segmentedControl.selectedSegmentIndex == 0 {
@@ -55,7 +58,6 @@ class ViewController: UIViewController {
         self.downloading = NTDownloadManager.shared.unFinishedList
         downloadedTableView.reloadData()
         downloadingTableView.reloadData()
-        NTDownloadManager.shared.clearTmp()
     }
 }
 // MARK: - UITableViewDelegate, UITableViewDataSource
@@ -70,14 +72,14 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if tableView.tag == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "downloadedCellId", for: indexPath) as! SPDownloadedViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: downloadedCellId, for: indexPath) as! SPDownloadedViewCell
             
             cell.fileName.text = downloaded[indexPath.row].fileName
             let sizeText = "\(Int((downloaded[indexPath.row].fileSize?.size ?? 0))) \(downloaded[indexPath.row].fileSize?.unit ?? "")"
             cell.fileSize.text = sizeText
             return cell
         } else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "downloadingCellId", for: indexPath) as! SPDownloadingViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: downloadingCellId, for: indexPath) as! SPDownloadingViewCell
             cell.fileInfo = downloading[indexPath.row]
             return cell
         }
@@ -133,13 +135,13 @@ extension ViewController {
         downloadedTableView.isHidden = false
         downloadedTableView.dataSource = self
         downloadedTableView.delegate = self
-        downloadedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: "downloadedCellId")
+        downloadedTableView.register(UINib(nibName: "SPDownloadedViewCell", bundle: nil), forCellReuseIdentifier: downloadedCellId)
         downloadedTableView.rowHeight = 50
         downloadingTableView.tag = 1
         downloadingTableView.dataSource = self
         downloadingTableView.delegate = self
         downloadingTableView.isHidden = true
-        downloadingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: "downloadingCellId")
+        downloadingTableView.register(UINib(nibName: "SPDownloadingViewCell", bundle: nil), forCellReuseIdentifier: downloadingCellId)
         downloadingTableView.rowHeight = 50
     }
 }

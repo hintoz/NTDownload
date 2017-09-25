@@ -26,18 +26,12 @@ open class NTDownloadManager: URLSessionDownloadTask {
     
     override init() {
         super.init()
-        
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: OperationQueue.main)
         self.loadTaskList()
-        debugPrint(plistPath)
+//        debugPrint(plistPath)
     }
-
     public func addDownloadTask(urlString: String, fileName: String? = nil, fileImage: String? = nil) {
-//        for task in taskList {
-//            if task.fileURL == url {
-//                return
-//            }
-//        }
+
         let url = URL(string: urlString)!
         let request = URLRequest(url: url)
         let downloadTask = session.downloadTask(with: request)
@@ -92,32 +86,25 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
     }
 
-//    /// 删除下载文件
-//    public func removeTask(fileInfo: NTDownloadTask) {
-//        for i in 0..<taskList.count {
-//            if (fileInfo.fileURL == taskList[i].fileURL) {
-//                if fileInfo.status == .NTFinishedDownload {
-//                    let path = "\(documentPath)/\(fileInfo.fileName)"
-//                    try? FileManager.default.removeItem(atPath: path)
-//                } else {
-//                    taskList[i].task?.cancel()
-//                }
-//                taskList.remove(at: i)
-//                break
-//            }
-//        }
-//    }
-//    /// 删除所有下载文件
-//    public func removeAllTask() {
-//        for task in taskList {
-//            if task.status == .NTFinishedDownload {
-//                let path = "\(documentPath)/\(task.fileName)"
-//                try? FileManager.default.removeItem(atPath: path)
-//            }
-//        }
-//        try? FileManager.default.removeItem(atPath: plistPath)
-//    }
-//
+    public func removeTask(downloadTask: NTDownloadTask) {
+        for (index, task) in taskList.enumerated() {
+            if task.fileURL == downloadTask.fileURL {
+                if downloadTask.status == .NTFinishedDownload {
+                    try? FileManager.default.removeItem(atPath: downloadTask.destinationPath!)
+                } else {
+                    downloadTask.task?.cancel()
+                }
+                taskList.remove(at: index)
+                saveTaskList()
+                break
+            }
+        }
+    }
+    public func removeAllTask() {
+        for task in taskList {
+            removeTask(downloadTask: task)
+        }
+    }
     public func clearTmp() {
         do {
             let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())
@@ -130,7 +117,7 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
     }
 }
-// MARK: - 私有方法
+// MARK: - Private Function
 private extension NTDownloadManager {
     func saveTaskList() {
         let jsonArray = NSMutableArray()
