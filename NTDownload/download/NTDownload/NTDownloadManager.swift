@@ -118,17 +118,17 @@ open class NTDownloadManager: URLSessionDownloadTask {
 //        try? FileManager.default.removeItem(atPath: plistPath)
 //    }
 //
-//    public func clearTMP() {
-//        do {
-//            let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())
-//            try tmpDirectory.forEach { file in
-//                let path = String.init(format: "%@/%@", NSTemporaryDirectory(), file)
-//                try FileManager.default.removeItem(atPath: path)
-//            }
-//        } catch {
-//            print(error)
-//        }
-//    }
+    public func clearTmp() {
+        do {
+            let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())
+            try tmpDirectory.forEach { file in
+                let path = String.init(format: "%@/%@", NSTemporaryDirectory(), file)
+                try FileManager.default.removeItem(atPath: path)
+            }
+        } catch {
+            print(error)
+        }
+    }
 }
 // MARK: - 私有方法
 private extension NTDownloadManager {

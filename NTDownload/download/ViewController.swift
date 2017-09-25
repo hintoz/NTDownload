@@ -55,6 +55,7 @@ class ViewController: UIViewController {
         self.downloading = NTDownloadManager.shared.unFinishedList
         downloadedTableView.reloadData()
         downloadingTableView.reloadData()
+        NTDownloadManager.shared.clearTmp()
     }
 }
 // MARK: - UITableViewDelegate, UITableViewDataSource
