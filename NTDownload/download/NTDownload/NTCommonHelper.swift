@@ -7,8 +7,10 @@
 
 import UIKit
 
+public let NTDocumentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+
 open class NTCommonHelper {
-    
+
     open class func calculateFileSize(_ contentLength: Int64) -> Float {
         let dataLength: Float64 = Float64(contentLength)
         if dataLength >= (1024.0 * 1024.0 * 1024.0) {

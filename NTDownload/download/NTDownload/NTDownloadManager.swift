@@ -9,148 +9,103 @@ import UIKit
 
 open class NTDownloadManager: URLSessionDownloadTask {
     
-    /// 单例
     open static let shared = NTDownloadManager()
-    open var configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
-    /// 任务列表
-    open lazy var taskList = [NTDownloadTask]()
-    /// 下载管理器代理
-    open weak var downloadManagerDelegate: NTDownloadManagerDelegate?
-    fileprivate var session: URLSession?
-    fileprivate lazy var downloadTaskList = [URLSessionDownloadTask]()
-    /// Plist存储路径
-    fileprivate let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
-    /// 文件存储路径
-    fileprivate let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+    open weak var delegate: NTDownloadManagerDelegate?
+    
+    open var unFinishedList: [NTDownloadTask] {
+        return taskList.filter { $0.status != .NTFinishedDownload }
+    }
+    open var finishedList: [NTDownloadTask] {
+        return taskList.filter { $0.status == .NTFinishedDownload }
+    }
+    
+    private lazy var taskList = [NTDownloadTask]()
+    private let configuration = URLSessionConfiguration.background(withIdentifier: "NTDownload")
+    private var session: URLSession!
+    private let plistPath = "\(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0])/NTDownload.plist"
     
     override init() {
         super.init()
-        
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: OperationQueue.main)
         self.loadTaskList()
-        debugPrint(plistPath)
+//        debugPrint(plistPath)
     }
-    /// 未完成列表
-    open var unFinishedList: [NTDownloadTask] {
-        return taskList.filter({ (task) -> Bool in
-            return task.isFinished == false
-        })
-    }
-    /// 完成列表
-    open var finishedList: [NTDownloadTask] {
-        return taskList.filter({ (task) -> Bool in
-            return task.isFinished == true
-        })
-    }
-    /// 添加下载文件任务
-    public func newTask(urlString: String, name: String? = nil, fileImage: String?) {
-        guard let url = URL(string: urlString) else {
-            return
-        }
-        if url.scheme != "http" && url.scheme != "https" {
-            return
-        }
-        for task in taskList {
-            if task.url == url {
-                return
-            }
-        }
-        guard let downloadTask = self.session?.downloadTask(with: url) else {
-            return
-        }
+    public func addDownloadTask(urlString: String, fileName: String? = nil, fileImage: String? = nil) {
+
+        let url = URL(string: urlString)!
+        let request = URLRequest(url: url)
+        let downloadTask = session.downloadTask(with: request)
         downloadTask.resume()
-        self.downloadTaskList.append(downloadTask)
-        let task = NTDownloadTask(url: url, taskIdentifier: downloadTask.taskIdentifier, name: name, fileImage: fileImage, downloadState: NTDownloadState(rawValue: downloadTask.state.rawValue)!)
+        let status = NTDownloadStatus(rawValue: downloadTask.state.rawValue)!.status
+        let fileName = fileName ?? (url.absoluteString as NSString).lastPathComponent
+        let task = NTDownloadTask(fileURL: url, fileName: fileName,  fileImage: fileImage)
+        task.status = status
         task.task = downloadTask
         self.taskList.append(task)
-        downloadManagerDelegate?.addedDownload?(task: task)
+        delegate?.addDownloadRequest?(downloadTask: task)
         self.saveTaskList()
     }
-    /// 暂停下载文件
-    public func pauseTask(fileInfo: NTDownloadTask) {
-        if fileInfo.isFinished || fileInfo.downloadState != .NTDownloading {
+    
+    public func pauseTask(downloadTask: NTDownloadTask) {
+        if downloadTask.status != .NTDownloading {
             return
         }
-        for downloadTask in downloadTaskList {
-            if fileInfo.taskIdentifier == downloadTask.taskIdentifier {
-                downloadTask.cancel(byProducingResumeData: { (resumeData) in
-                    fileInfo.resumeData = resumeData
-                    fileInfo.downloadState = NTDownloadState(rawValue: downloadTask.state.rawValue)
-                    fileInfo.task = downloadTask
-                    fileInfo.delegate?.downloadTaskStopDownload?(task: fileInfo)
-                    self.saveTaskList()
-                })
-            }
+        var task = downloadTask.task
+        if task == nil {
+            task = session.downloadTask(with: downloadTask.fileURL)
+            downloadTask.task = task
         }
+        task?.suspend()
+        downloadTask.status = NTDownloadStatus(rawValue: (task?.state.rawValue)!)!.status
+        delegate?.downloadRequestDidPaused?(downloadTask: downloadTask)
     }
-    /// 恢复下载文件
-    public func resumeTask(fileInfo: NTDownloadTask) {
-        if fileInfo.isFinished || fileInfo.downloadState != .NTStopDownload {
+
+    public func resumeTask(downloadTask: NTDownloadTask) {
+        if downloadTask.status != .NTPauseDownload {
             return
         }
-        for i in 0..<downloadTaskList.count {
-            if downloadTaskList[i].taskIdentifier == fileInfo.taskIdentifier {
-                if fileInfo.resumeData == nil {
-                    downloadTaskList[i] = (session?.downloadTask(with: fileInfo.url))!
-                } else {
-                    downloadTaskList[i] = (session?.downloadTask(withResumeData: fileInfo.resumeData!))!
-                }
-                fileInfo.taskIdentifier = downloadTaskList[i].taskIdentifier
-                downloadTaskList[i].resume()
-                fileInfo.downloadState = NTDownloadState(rawValue: downloadTaskList[i].state.rawValue)
-                fileInfo.task = downloadTaskList[i]
-                fileInfo.delegate?.downloadTaskDownloading?(task: fileInfo)
-                fileInfo.resumeData = nil
-            }
+        var task = downloadTask.task
+        if task == nil {
+            task = session.downloadTask(with: downloadTask.fileURL)
+            downloadTask.task = task
         }
+        task?.resume()
+        downloadTask.status = NTDownloadStatus(rawValue: (task?.state.rawValue)!)!.status
+        delegate?.downloadRequestDidStarted?(downloadTask: downloadTask)
     }
-    /// 开始所有下载任务
+
     public func resumeAllTask() {
         for task in unFinishedList {
-            resumeTask(fileInfo: task)
+            resumeTask(downloadTask: task)
         }
     }
-    /// 暂停所有下载任务
+
     public func pauseAllTask() {
-        for task in finishedList {
-            pauseTask(fileInfo: task)
+        for task in unFinishedList {
+            pauseTask(downloadTask: task)
         }
     }
-    /// 返回已下载完成文件路径 若未下载完成 则返回 nil
-    public func taskPath(fileInfo: NTDownloadTask) -> String? {
-        if !fileInfo.isFinished {
-            return nil
-        }
-        return "\(documentPath)/\(fileInfo.fileName)"
-    }
-    /// 删除下载文件
-    public func removeTask(fileInfo: NTDownloadTask) {
-        for i in 0..<taskList.count {
-            if (fileInfo.url == taskList[i].url) {
-                if fileInfo.isFinished {
-                    let path = "\(documentPath)/\(fileInfo.fileName)"
-                    try? FileManager.default.removeItem(atPath: path)
+
+    public func removeTask(downloadTask: NTDownloadTask) {
+        for (index, task) in taskList.enumerated() {
+            if task.fileURL == downloadTask.fileURL {
+                if downloadTask.status == .NTFinishedDownload {
+                    try? FileManager.default.removeItem(atPath: downloadTask.destinationPath!)
                 } else {
-                    taskList[i].task?.cancel()
+                    downloadTask.task?.cancel()
                 }
-                taskList.remove(at: i)
+                taskList.remove(at: index)
                 saveTaskList()
                 break
             }
         }
     }
-    /// 删除所有下载文件
     public func removeAllTask() {
         for task in taskList {
-            if task.isFinished {
-                let path = "\(documentPath)/\(task.fileName)"
-                try? FileManager.default.removeItem(atPath: path)
-            }
+            removeTask(downloadTask: task)
         }
-        try? FileManager.default.removeItem(atPath: plistPath)
     }
-    
-    public func clearTMP() {
+    public func clearTmp() {
         do {
             let tmpDirectory = try FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())
             try tmpDirectory.forEach { file in
@@ -162,58 +117,46 @@ open class NTDownloadManager: URLSessionDownloadTask {
         }
     }
 }
-// MARK: - 私有方法
-extension NTDownloadManager {
-    fileprivate func saveTaskList() {
+// MARK: - Private Function
+private extension NTDownloadManager {
+    func saveTaskList() {
         let jsonArray = NSMutableArray()
         for task in taskList {
             let jsonItem = NSMutableDictionary()
-            jsonItem["name"] = task.name
-            jsonItem["url"] = task.url.absoluteString
-            jsonItem["isFinished"] = task.isFinished
+            jsonItem["fileURL"] = task.fileURL.absoluteString
+            jsonItem["fileName"] = task.fileName
             jsonItem["fileImage"] = task.fileImage
-            jsonItem["fileTotalSize"] = task.fileTotalSize
-            jsonItem["fileTotalUnit"] = task.fileTotalUnit
-            jsonItem["fileReceivedSize"] = task.fileReceivedSize
-            jsonItem["fileReceivedUnit"] = task.fileReceivedUnit
-            if !task.isFinished {
-                jsonItem["resumeData"] = task.resumeData
+            if task.status == .NTFinishedDownload {
+                jsonItem["statusCode"] = NTDownloadStatus.NTFinishedDownload.rawValue
+                jsonItem["fileSize.size"] = task.fileSize?.size
+                jsonItem["fileSize.unit"] = task.fileSize?.unit
             }
             jsonArray.add(jsonItem)
         }
         jsonArray.write(toFile: plistPath, atomically: true)
     }
-    fileprivate func loadTaskList() {
+    func loadTaskList() {
         guard let jsonArray = NSArray(contentsOfFile: plistPath) else {
             return
         }
         for jsonItem in jsonArray {
-            guard let item = jsonItem as? NSDictionary, let name = item["name"] as? String, let urlString = item["url"] as? String, let isFinished = item["isFinished"] as? Bool, let fileTotalSize = item["fileTotalSize"] as? Float, let fileTotalUnit = item["fileTotalUnit"] as? String, let fileReceivedSize = item["fileReceivedSize"] as? Float, let fileReceivedUnit = item["fileReceivedUnit"] as? String else {
+            guard let item = jsonItem as? NSDictionary, let fileName = item["fileName"] as? String, let urlString = item["fileURL"] as? String else {
                 return
             }
-            let resumeData = item["resumeData"] as? Data
-            let url = URL(string: urlString)
+            let fileURL = URL(string: urlString)!
             let fileImage = item["fileImage"] as? String
-            let task = NTDownloadTask(url: url!, taskIdentifier: 0, name: name, fileImage: fileImage, downloadState: NTDownloadState.NTStopDownload)
-            task.isFinished = isFinished
-            task.fileTotalSize = fileTotalSize
-            task.fileTotalUnit = fileTotalUnit
-            task.fileReceivedSize = fileReceivedSize
-            task.fileReceivedUnit = fileReceivedUnit
-            task.resumeData = resumeData
-            self.taskList.append(task)
-            if task.isFinished {
-                task.downloadState = NTDownloadState.NTFinishedDownload
+            let statusCode = item["statusCode"] as? Int
+            let task = NTDownloadTask(fileURL: fileURL, fileName: fileName, fileImage: fileImage)
+            if let statusCode = statusCode {
+                let status = NTDownloadStatus(rawValue: statusCode)
+                let fileSize = item["fileSize.size"] as? Float
+                let fileSizeUnit = item["fileSize.unit"] as? String
+                task.status = status
+                task.fileSize = (fileSize, fileSizeUnit) as? (size: Float, unit: String)
             } else {
-                guard let downloadTask = session?.downloadTask(with: task.url) else {
-                    continue
-                }
-                task.taskIdentifier = downloadTask.taskIdentifier
-                downloadTask.cancel()
-                self.downloadTaskList.append(downloadTask)
-                task.delegate?.downloadTaskStopDownload?(task: task)
-                self.saveTaskList()
+                task.status = .NTPauseDownload
             }
+            self.taskList.append(task)
         }
     }
 }
@@ -221,43 +164,57 @@ extension NTDownloadManager {
 extension NTDownloadManager: URLSessionDownloadDelegate {
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        debugPrint("task id: \(task.taskIdentifier)")
         let error = error as NSError?
+        var downloadTask = task as! URLSessionDownloadTask
         if (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonUserForceQuitApplication || (error?.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int) == NSURLErrorCancelledReasonBackgroundUpdatesDisabled {
-            for downloadTask in unFinishedList {
-                if downloadTask.url == task.originalRequest?.url || downloadTask.url == task.currentRequest?.url {
-                    let resumeData = error?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data
-                    downloadTask.resumeData = resumeData
-                    resumeTask(fileInfo: downloadTask)
+            let task = unFinishedList.filter { $0.fileURL == downloadTask.currentRequest?.url || $0.fileURL == downloadTask.originalRequest?.url }.first
+            let fileURL = task?.fileURL
+            let resumeData = error?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+            if resumeData == nil {
+                downloadTask = session.downloadTask(with: fileURL!)
+            } else {
+                downloadTask = session.downloadTask(withResumeData: resumeData!)
+            }
+            task?.status = NTDownloadStatus(rawValue: downloadTask.state.rawValue)!.status
+            task?.task = downloadTask
+        } else {
+            for task in unFinishedList {
+                if downloadTask.isEqual(task.task) {
+                    if error != nil {
+                        task.status = .NTFailed
+                        task.fileSize = nil
+                        task.downloadedFileSize = nil
+                        delegate?.downloadRequestDidFailedWithError?(error: error!, downloadTask: task)
+                    }
                 }
             }
         }
     }
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         let documentUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        for task in taskList {
-            if task.taskIdentifier == downloadTask.taskIdentifier {
-                task.isFinished = true
-                task.downloadState = .NTFinishedDownload
-                task.resumeData = nil
+        for task in unFinishedList {
+            if downloadTask.isEqual(task.task) {
+                task.status = .NTFinishedDownload
                 let destUrl = documentUrl.appendingPathComponent(task.fileName)
-                try? FileManager.default.moveItem(at: location, to: destUrl)
-                downloadManagerDelegate?.finishedDownload?(task: task)
+                do {
+                    try FileManager.default.moveItem(at: location, to: destUrl)
+                    delegate?.downloadRequestFinished?(downloadTask: task)
+                } catch {
+                    delegate?.downloadRequestDidFailedWithError?(error: error, downloadTask: task)
+                }
             }
         }
-        self.saveTaskList()
+        saveTaskList()
     }
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         for task in unFinishedList {
-            if task.taskIdentifier == downloadTask.taskIdentifier {
-                task.fileTotalSize = NTCommonHelper.calculateFileSize(totalBytesExpectedToWrite)
-                task.fileTotalUnit = NTCommonHelper.calculateUnit(totalBytesExpectedToWrite)
-                task.fileReceivedSize = NTCommonHelper.calculateFileSize(totalBytesWritten)
-                task.fileReceivedUnit = NTCommonHelper.calculateUnit(totalBytesWritten)
-                task.delegate?.downloadTaskUpdateProgress?(task: task, totalBytesWritten: totalBytesWritten, totalBytesExpectedToWrite: totalBytesExpectedToWrite)
+            if downloadTask.isEqual(task.task) {
+                task.fileSize = (NTCommonHelper.calculateFileSize(totalBytesExpectedToWrite), NTCommonHelper.calculateUnit(totalBytesExpectedToWrite))
+                task.downloadedFileSize = (NTCommonHelper.calculateFileSize(totalBytesWritten),NTCommonHelper.calculateUnit(totalBytesWritten))
+                task.progress = Float(totalBytesWritten) / Float(totalBytesExpectedToWrite)
+                delegate?.downloadRequestUpdateProgress?(downloadTask: task)
             }
         }
     }
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
-    }
 }
+

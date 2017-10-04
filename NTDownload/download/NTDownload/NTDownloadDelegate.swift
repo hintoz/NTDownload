@@ -8,18 +8,17 @@
 import Foundation
 
 @objc public protocol NTDownloadManagerDelegate: NSObjectProtocol {
-    /// 下载完成
-    @objc optional func finishedDownload(task: NTDownloadTask)
-    ///
-    @objc optional func addedDownload(task: NTDownloadTask)
-}
-
-@objc public protocol NTDownloadTaskDelegate: NSObjectProtocol {
-    
-    /// 下载进度
-    @objc optional func downloadTaskUpdateProgress(task: NTDownloadTask, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64)
-    /// 开始下载
-    @objc optional func downloadTaskDownloading(task: NTDownloadTask)
-    /// 暂停下载
-    @objc optional func downloadTaskStopDownload(task: NTDownloadTask)
+  
+    /// A delegate method called when add new downlaod task
+    @objc optional func addDownloadRequest(downloadTask: NTDownloadTask)
+    /// A delegate method called each time whenever download task is start
+    @objc optional func downloadRequestDidStarted(downloadTask: NTDownloadTask)
+    /// A delegate method called each time whenever download task is paused
+    @objc optional func downloadRequestDidPaused(downloadTask: NTDownloadTask)
+    /// A delegate method called each time whenever any download task's progress is updated
+    @objc optional func downloadRequestUpdateProgress(downloadTask: NTDownloadTask)
+    /// A delegate method called each time whenever any download task is finished
+    @objc optional func downloadRequestFinished(downloadTask: NTDownloadTask)
+    /// A delegate method called each time whenever any download task is failed
+    @objc optional func downloadRequestDidFailedWithError(error: Error, downloadTask: NTDownloadTask)
 }

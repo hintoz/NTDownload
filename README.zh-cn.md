@@ -5,37 +5,34 @@
 <a href="https://raw.githubusercontent.com/ntian2/NTDownload/master/LICENSE"><img src="https://img.shields.io/cocoapods/l/NTDownload.svg?style=flat"></a>
 <a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/cocoapods/p/NTDownload.svg?style=flat"></a>
 <a href="https://github.com/ntian2/NTDownload/"><img src="https://img.shields.io/badge/Swift-4.0%2B-orange.svg"></a>
-<a href="https://github.com/ntian2/NTDownload/blob/master/README.zh-cn.md/"><img src="https://img.shields.io/badge/%E4%B8%AD%E6%96%87-README-blue.svg?style=flat"></a>
 </p>
 
+NTDownlaod 是一个非常小的, Swift 4 写的 下载库.
 
-NTDownlaod is a lightweight Swift 4 library for download files.
+## 特点
+- [x] 支持断点续传.
+- [x] 后台下载.
+- [x] 基于 `URLSession`.
+- [x] 可以随时下载或者暂停任务.
+- [x] 仅有4个文件.
 
-## Features
-- [x] Support for resume breakpoint 
-- [x] Download files when the app is in the background.
-- [x] `URLSession` -based networking.
-- [x] It can resume or pause any download tasks.
-- [x] This library contains only 4 files.
-
-## Requirements
+## 要求
 * iOS 8.0+
 * Swift 4
 
-## Installation
-NTDownlaod is available through Cocoapods. So you can add the following line to your Podfile.
+## 安装
+NTDownload 支持 Cocoapods. 所以你可以将其添加到你的 Podfile 里.
 
 ```ruby
 pod 'NTDownload'
 ```
 
-## Usages
+## 实例
 ```swift
 let urlString = "url_of_you_file"
 NTDownloadManager.shared.addDownloadTask(urlString: urlString)
 ```
-You can also clone the repo, and run the example project.
-
+你也可以 clone repo, 然后 运行这个 实例.
 ## GIF Demo
 ![GIFDemo](https://github.com/ntian2/NTDownload/raw/master/NTDownload.gif)
 
