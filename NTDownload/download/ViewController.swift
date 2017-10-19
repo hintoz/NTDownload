@@ -31,10 +31,16 @@ class ViewController: UIViewController {
     }
     @IBAction func addBtn() {
         let alert = UIAlertController(title: "URL", message: nil, preferredStyle: .alert)
-        alert.addTextField(configurationHandler: nil)
+        alert.addTextField { (textField) in
+            textField.placeholder = "URL"
+        }
+        alert.addTextField { (textField) in
+            textField.placeholder = "Name"
+        }
         let okAction = UIAlertAction(title: "Download", style: .default) { (action) in
             let textFiled = alert.textFields?[0].text
-            NTDownloadManager.shared.addDownloadTask(urlString: textFiled!, fileImage: nil)
+            let name = alert.textFields?[1].text
+            NTDownloadManager.shared.addDownloadTask(urlString: textFiled!, fileName: name, fileImage: nil)
             self.initdata()
         }
         let action = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)

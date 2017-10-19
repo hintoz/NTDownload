@@ -33,6 +33,11 @@ open class NTDownloadManager: URLSessionDownloadTask {
     public func addDownloadTask(urlString: String, fileName: String? = nil, fileImage: String? = nil) {
 
         let url = URL(string: urlString)!
+        for task in taskList {
+            if task.fileURL == url {
+                return
+            }
+        }
         let request = URLRequest(url: url)
         let downloadTask = session.downloadTask(with: request)
         downloadTask.resume()
