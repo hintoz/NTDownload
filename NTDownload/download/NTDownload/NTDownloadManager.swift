@@ -9,7 +9,7 @@ import UIKit
 
 open class NTDownloadManager: URLSessionDownloadTask {
     
-    open static let shared = NTDownloadManager()
+    public static let shared = NTDownloadManager()
     open weak var delegate: NTDownloadManagerDelegate?
     
     open var unFinishedList: [NTDownloadTask] {

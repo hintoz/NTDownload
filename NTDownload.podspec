@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name         = "NTDownload"
-  s.version      = "1.0.0"
+  s.version      = "1.1.0"
   s.summary      = "A lightweight Swift 4 library for download files"
 
   s.homepage     = "https://github.com/ntian2/NTDownload"
